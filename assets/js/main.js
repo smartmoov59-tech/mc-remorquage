@@ -349,7 +349,9 @@
       const nv = v || '—';
       if (n.textContent !== nv) { n.textContent = nv; n.classList.remove('is-new'); void n.offsetWidth; n.classList.add('is-new'); }
     };
+    const freeNote = $('#freeNote');
     const refresh = () => {
+      if (freeNote) freeNote.hidden = radio('besoin') !== 'Enlèvement d’épave';
       planBox.hidden = radio('quand') !== 'Planifier';
       icsBtn.hidden = !(radio('quand') === 'Planifier' && val('date'));
       setT('besoin', radio('besoin'));
@@ -684,7 +686,7 @@
     gsap.to('[data-hero-media]', { yPercent: 14, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
     gsap.to('[data-hero-giant]', { yPercent: -34, xPercent: -6, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
     gsap.to('.hero__inner', { yPercent: -10, opacity: 0.2, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom 20%', scrub: true } });
-    gsap.fromTo('.hero__media > *', { scale: 1.02 }, { scale: 1.13, duration: 22, ease: 'none', repeat: -1, yoyo: true });
+    gsap.fromTo('.hero__photo', { scale: 1, transformOrigin: '70% 70%' }, { scale: 1.07, duration: 20, ease: 'none', repeat: -1, yoyo: true });
     // fond de l'appel final
     const bg = $('[data-parallax-bg]');
     if (bg) gsap.fromTo(bg, { yPercent: -8 }, { yPercent: 8, ease: 'none', scrollTrigger: { trigger: bg.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } });
@@ -826,7 +828,7 @@
     gsap.from(core, { y: 30, opacity: 0, duration: 0.8, ease: 'expo.out' });
     gsap.to(o, { v: 72, duration: 1.1, ease: 'power2.out', onUpdate: upd });
     const fontsReady = (document.fonts && document.fonts.ready) || Promise.resolve();
-    const posterReady = new Promise((r) => { const i = $('.hero__poster'); if (!i || i.complete) r(); else { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); } });
+    const posterReady = new Promise((r) => { const i = $('.hero__photo'); if (!i || i.complete) r(); else { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); } });
     Promise.race([
       Promise.all([fontsReady, posterReady, new Promise((r) => setTimeout(r, 1300))]),
       new Promise((r) => setTimeout(r, 3600))
@@ -890,6 +892,12 @@
     safe('loader', () => runLoader(start));
     window.addEventListener('load', () => ScrollTrigger.refresh());
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ScrollTrigger.refresh());
+    // les cartes de prestations défilent horizontalement : on les précharge en tâche de fond (hors économie de données)
+    window.addEventListener('load', () => setTimeout(() => {
+      const c = navigator.connection || {};
+      if (c.saveData || /(^|-)(2|3)g$/.test(c.effectiveType || '')) return;
+      $$('.card__img, .step__media img').forEach((i) => { i.loading = 'eager'; });
+    }, 1200));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
